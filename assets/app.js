@@ -1,7 +1,9 @@
 /*
- * assets/app.js — демо «Данные задач»: загрузка CSV по JSON-схеме и таблица в оформлении этапа 1.
+ * assets/app.js — демо: загрузка CSV по JSON-схеме, таблица (вкладка 1) и общий API для графиков.
  * Порядок: JSON-схема → CSV → таблица. Колонки, фильтры, этапы и подсветка статуса берутся из схемы.
+ * Вкладки: #data — «Данные задач», #state — «Состояние системы» (assets/state.js).
  * Зависимости: assets/loader.js (window.DataLoader), assets/data.js (window.TaskData — демо-набор по seed).
+ * Экспорт: window.DemoApp — схема, отфильтрованные строки, дата среза, подписка на изменения.
  */
 (function () {
     'use strict';
@@ -35,15 +37,31 @@
     };
 
     const HINT_NO_SCHEMA = 'Шаг 1 — выберите JSON-схему с форматом CSV. Кнопка загрузки CSV разблокируется после её проверки.';
+    const NO_ASOF = { day: null, text: '—' };
     const emptyFilters = () => ({ q: '', seg: {}, status: '' });
     const state = {
         schema: null, schemaFile: '',
-        records: [], csvFile: '', asOf: '—',
+        records: [], csvFile: '', asOf: NO_ASOF,
         loading: false, csvToken: 0,
         filters: emptyFilters(),
         sort: { key: '__line', dir: 'asc' },
         page: 1, pageSize: 50
     };
+
+    /* ---------- подписчики (графики других вкладок) ---------- */
+    const listeners = [];
+    let dataVersion = 0;
+    let lastSig = null;
+    function notify(reason) {
+        listeners.forEach((fn) => {
+            try { fn(reason); } catch (e) { console.error(e); if (window.__diag) window.__diag.errors.push('state.js — ' + e.message); }
+        });
+    }
+    // Уведомляем только при смене данных или фильтров, которые влияют на графики (статус и страницы — нет)
+    function maybeNotify() {
+        const sig = dataVersion + '|' + state.filters.q + '|' + JSON.stringify(state.filters.seg);
+        if (sig !== lastSig) { lastSig = sig; notify('data'); }
+    }
 
     /* ---------- helpers ---------- */
     const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -114,13 +132,26 @@
             '. Графики: ' + (charts.length ? charts.join(', ') : 'не настроены') + '.';
     }
 
-    // Дата среза = самая поздняя дата в колонках этапов
+    // Дата среза = самая поздняя дата в колонках этапов (workflow + CFD)
     function computeAsOf(records) {
-        const st = stageKeys();
-        if (!st.length || !records.length) return '—';
+        const sc = state.schema;
+        if (!sc || !records.length) return NO_ASOF;
+        const keys = stageKeys().slice();
+        const cfd = sc.mapping.charts && sc.mapping.charts.cfd;
+        if (cfd && Array.isArray(cfd.stages)) cfd.stages.forEach((k) => { if (keys.indexOf(k) < 0 && sc.byKey[k]) keys.push(k); });
+        if (!keys.length) return NO_ASOF;
         let max = -Infinity;
-        records.forEach((r) => st.forEach((k) => { const v = r[k]; if (v !== null && v > max) max = v; }));
-        return isFinite(max) ? state.schema.byKey[st[0]].displayFormat.format(max) : '—';
+        records.forEach((r) => keys.forEach((k) => { const v = r[k]; if (v !== null && v !== undefined && v > max) max = v; }));
+        return isFinite(max) ? { day: max, text: sc.byKey[keys[0]].displayFormat.format(max) } : NO_ASOF;
+    }
+
+    function filterSummary() {
+        const sc = state.schema;
+        if (!sc) return '';
+        const parts = [];
+        Object.keys(state.filters.seg).forEach((k) => { const v = state.filters.seg[k]; if (v && sc.byKey[k]) parts.push(sc.byKey[k].label + ': ' + v); });
+        if (state.filters.q) parts.push('поиск «' + state.filters.q + '»');
+        return parts.length ? 'фильтры — ' + parts.join(', ') : '';
     }
 
     /* ---------- filtering & sorting ---------- */
@@ -307,7 +338,7 @@
         els.noDataBtn.disabled = state.loading;
         setText('[data-source]', state.csvFile || 'не загружен');
         setText('[data-schema]', sc ? sc.name : '—');
-        setText('[data-asof]', state.asOf);
+        setText('[data-asof]', state.asOf.text);
         setText('[data-count]', fmtInt(n));
     }
 
@@ -329,6 +360,7 @@
                 : 'Схема «' + sc.name + '» принята — загрузите CSV-файл.';
             els.meta.textContent = 'Нет данных';
             setControlsEnabled(false);
+            maybeNotify();
             return;
         }
 
@@ -360,6 +392,7 @@
         els.prev.disabled = state.page <= 1;
         els.next.disabled = state.page >= pages;
         updateSortIndicators();
+        maybeNotify();
     }
 
     /* ---------- шаг 1: JSON-схема ---------- */
@@ -370,10 +403,11 @@
         state.schemaFile = fileName;
         state.records = [];
         state.csvFile = '';
-        state.asOf = '—';
+        state.asOf = NO_ASOF;
         state.filters = emptyFilters();
         state.sort = defaultSort();
         state.page = 1;
+        dataVersion += 1;
         els.csvMsgs.innerHTML = '';
         setStatus(els.csvStatus, 'Данные', 'не загружены');
         buildHead();
@@ -459,6 +493,7 @@
                     state.filters = emptyFilters();
                     state.sort = defaultSort();
                     state.page = 1;
+                    dataVersion += 1;
                     buildFilters(); // значения строковых сегментов берутся из данных
                     els.status.value = '';
                     const partial = res.errorCount > 0;
@@ -490,10 +525,11 @@
         state.schemaFile = '';
         state.records = [];
         state.csvFile = '';
-        state.asOf = '—';
+        state.asOf = NO_ASOF;
         state.filters = emptyFilters();
         state.sort = { key: '__line', dir: 'asc' };
         state.page = 1;
+        dataVersion += 1;
         els.schemaMsgs.innerHTML = '';
         els.csvMsgs.innerHTML = '';
         setStatus(els.schemaStatus, 'Схема', 'не выбрана');
@@ -553,6 +589,27 @@
             download('tasks_seed-' + seed + '.csv', L.toCsv(G.toSchemaRecords(tasks), v.schema), 'text/csv;charset=utf-8', true);
             genMessage('✓ Задач: ' + fmtInt(tasks.length) + ' · срез ' + G.formatDay(G.AS_OF) + ' · отпечаток ' + G.fingerprint(tasks), 'ok');
         });
+    }
+
+    /* ---------- вкладки (#data / #state) ---------- */
+    const VIEWS = ['data', 'state'];
+    const VIEW_TITLES = { data: 'Данные задач', state: 'Состояние системы' };
+    function readView() {
+        const h = window.location.hash.slice(1);
+        return VIEWS.indexOf(h) >= 0 ? h : null;
+    }
+    function applyView(v, focus) {
+        document.body.dataset.view = v;
+        document.querySelectorAll('[data-view-link]').forEach((a) => {
+            if (a.dataset.viewLink === v) a.setAttribute('aria-current', 'page');
+            else a.removeAttribute('aria-current');
+        });
+        document.title = VIEW_TITLES[v] + ' — демо-дашборд регламента Prod IT (синтетические данные)';
+        notify('view');
+        if (focus) {
+            const h = byId(v === 'state' ? 'state-h' : 'table-h');
+            if (h) h.focus({ preventScroll: true });
+        }
     }
 
     /* ---------- события ---------- */
@@ -629,7 +686,21 @@
         els.prev.addEventListener('click', () => { state.page -= 1; render(); els.wrap.scrollTop = 0; });
         els.next.addEventListener('click', () => { state.page += 1; render(); els.wrap.scrollTop = 0; });
         els.exportBtn.addEventListener('click', exportSlice);
+
+        window.addEventListener('hashchange', () => { const v = readView(); if (v) applyView(v, true); });
     }
+
+    /* ---------- API для вкладок с графиками ---------- */
+    window.DemoApp = Object.freeze({
+        getSchema: () => state.schema,
+        getRecords: () => (state.schema ? state.records.filter(matchesBase) : []), // фильтры поиска и сегментов, без статуса
+        getAllCount: () => state.records.length,
+        getAsOfDay: () => state.asOf.day,
+        getView: () => document.body.dataset.view,
+        getFilterSummary: filterSummary,
+        onChange: (fn) => { if (typeof fn === 'function') listeners.push(fn); },
+        download, esc
+    });
 
     /* ---------- init: по умолчанию страница без данных ---------- */
     function init() {
@@ -637,6 +708,7 @@
         buildFilters();
         setupGenerator();
         bind();
+        applyView(readView() || 'data', false);
         updateChrome();
         render();
     }
