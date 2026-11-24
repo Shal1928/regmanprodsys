@@ -1,0 +1,85 @@
+{
+  "$schemaVersion": "1.0",
+  "name": "Задачи трекера — демо Prod IT",
+  "description": "Формат выгрузки задач для демо-дашборда регламента управления производственной IT-системой. Данные синтетические.",
+  "synthetic": true,
+  "csv": {
+    "delimiter": ";",
+    "quote": "\"",
+    "encoding": "utf-8",
+    "header": true,
+    "skipEmptyLines": true,
+    "trim": true,
+    "decimalSeparator": ","
+  },
+  "validation": {
+    "onRowError": "skip",
+    "checkStageOrder": true
+  },
+  "columns": [
+    { "key": "id", "source": "ID", "label": "ID", "type": "string", "required": true, "unique": true, "pattern": "^[A-Z]{3}[0-9]{3}$", "description": "Уникальный ключ: 3 латинские буквы и 3 цифры" },
+    { "key": "title", "source": "Тема", "label": "Тема", "type": "string", "required": true, "description": "Краткое описание работы" },
+    { "key": "team", "source": "Команда", "label": "Команда", "type": "enum", "required": true, "values": ["Платформа", "Ядро", "Интеграции"] },
+    { "key": "workType", "source": "Тип работы", "label": "Тип работы", "type": "enum", "required": true, "values": ["Новый функционал", "Ошибка", "Техническое развитие"] },
+    {
+      "key": "serviceClass", "source": "Класс обслуживания", "label": "Класс обслуживания", "type": "enum", "required": true,
+      "values": ["EXP", "FD", "STD", "INT"],
+      "valueLabels": { "EXP": "Срочный (Expedite)", "FD": "Фиксированная дата (Fixed Date)", "STD": "Стандартный (Standard)", "INT": "Нематериальный (Intangible)" },
+      "display": "tag",
+      "tones": { "EXP": "danger", "FD": "warning", "STD": "neutral", "INT": "info" }
+    },
+    { "key": "opened", "source": "Открыта", "label": "Открыта", "type": "date", "format": "dd.MM.yyyy", "required": true, "description": "Дата входа в статус «Открыта»" },
+    { "key": "analysis", "source": "Анализ", "label": "Анализ", "type": "date", "format": "dd.MM.yyyy", "required": false, "description": "Дата входа в статус «Анализ»" },
+    { "key": "development", "source": "Разработка", "label": "Разработка", "type": "date", "format": "dd.MM.yyyy", "required": false, "description": "Дата входа в статус «Разработка»" },
+    { "key": "testing", "source": "Тестирование", "label": "Тестирование", "type": "date", "format": "dd.MM.yyyy", "required": false, "description": "Дата входа в статус «Тестирование»" },
+    { "key": "release", "source": "Релиз", "label": "Релиз", "type": "date", "format": "dd.MM.yyyy", "required": false, "description": "Дата входа в статус «Релиз»" },
+    { "key": "closed", "source": "Закрыта", "label": "Закрыта", "type": "date", "format": "dd.MM.yyyy", "required": false, "description": "Дата входа в статус «Закрыта»" }
+  ],
+  "mapping": {
+    "id": "id",
+    "title": "title",
+    "search": ["id", "title"],
+    "segments": ["team", "workType", "serviceClass"],
+    "workflow": {
+      "stages": ["opened", "analysis", "development", "testing", "release", "closed"],
+      "doneStage": "closed"
+    },
+    "charts": {
+      "cfd": {
+        "title": "Состояние системы: накопительная диаграмма потока",
+        "stages": ["opened", "analysis", "development", "testing", "release", "closed"],
+        "groupBy": ["team", "workType", "serviceClass"],
+        "interval": "day"
+      },
+      "throughput": {
+        "title": "Возможности: пропускная способность",
+        "doneDate": "closed",
+        "interval": "week",
+        "groupBy": "workType"
+      },
+      "leadTime": {
+        "title": "Возможности: Lead Time",
+        "startDate": "opened",
+        "endDate": "closed",
+        "units": "workdays",
+        "percentiles": [50, 85, 95],
+        "groupBy": "serviceClass"
+      },
+      "cycleTime": {
+        "title": "Cycle Time от начала разработки",
+        "startDate": "development",
+        "endDate": "closed",
+        "units": "workdays",
+        "percentiles": [50, 85]
+      },
+      "forecast": {
+        "title": "Прогноз: Monte Carlo",
+        "doneDate": "closed",
+        "historyWeeks": 12,
+        "simulations": 10000,
+        "confidence": [50, 85, 95],
+        "backlogStages": ["opened", "analysis"]
+      }
+    }
+  }
+}

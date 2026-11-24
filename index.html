@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Данные задач — демо-дашборд регламента Prod IT (синтетические данные)</title>
+	<meta name="description" content="Демо-витрина регламента управления производственной IT-системой. Загрузка задач трекера из CSV по JSON-схеме.">
+	<!-- Favicon: тот же логотип (глаз с барами + линия тренда), встроен как SVG data URI — работает без отдельного файла и по file:// -->
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%23E9EDEF'/%3E%3Cpath d='M27 17.3C24.4 14 20.8 11.9 16.3 11.9 11.5 11.9 7.5 14.3 4.1 18.3' fill='none' stroke='%231F4E5F' stroke-width='2.4'/%3E%3Ccircle cx='15.8' cy='17.9' r='4.6' fill='%231F4E5F'/%3E%3Cg fill='%23FFFFFF'%3E%3Crect x='13.3' y='15.4' width='1' height='5'/%3E%3Crect x='14.6' y='16.9' width='.9' height='3.5'/%3E%3Crect x='15.8' y='18.4' width='.8' height='2'/%3E%3Crect x='16.9' y='19.1' width='.75' height='1.3'/%3E%3Crect x='17.95' y='19.7' width='.7' height='.7'/%3E%3C/g%3E%3Cpath d='M4.1 18.3C5.8 20.3 7.3 21.8 9 22.9L10.6 21.8 14.2 24Q16.1 24.4 17.9 24L22.6 20.6 24.8 21.6 29.4 17.6' fill='none' stroke='%232E86AB' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M33.6 13.8 32.2 19.6 27.4 15.6Z' fill='%232E86AB'/%3E%3C/svg%3E">
+	<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+
+<header class="site-header">
+	<div class="container header-inner">
+		<div class="brand">
+			<!-- Логотип: глаз с барами в зрачке + линия тренда со стрелкой (наблюдение → прогноз) -->
+			<svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+				<rect x="1" y="1" width="34" height="34" rx="8" fill="currentColor" opacity=".1"/>
+				<path d="M27 17.3C24.4 14 20.8 11.9 16.3 11.9 11.5 11.9 7.5 14.3 4.1 18.3"
+					  fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="butt"/>
+				<circle cx="15.8" cy="17.9" r="4.5" fill="currentColor"/>
+				<g fill="#FFFFFF">
+					<rect x="13.3" y="15.4" width="1" height="5"/>
+					<rect x="14.6" y="16.9" width=".9" height="3.5"/>
+					<rect x="15.8" y="18.4" width=".8" height="2"/>
+					<rect x="16.9" y="19.1" width=".75" height="1.3"/>
+					<rect x="17.95" y="19.7" width=".7" height=".7"/>
+				</g>
+				<g style="color: var(--accent)">
+					<path d="M4.1 18.3C5.8 20.3 7.3 21.8 9 22.9L10.6 21.8 14.2 24Q16.1 24.4 17.9 24L22.6 20.6 24.8 21.6 29.4 17.6"
+						  fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+					<path d="M33 14.3 31.8 19 27.9 15.8Z" fill="currentColor"/>
+				</g>
+			</svg>
+			<div>
+				<p class="eyebrow">Регламент управления производственной IT-системой</p>
+				<h1>Демо-дашборд: данные трекера задач</h1>
+			</div>
+		</div>
+		<span class="badge badge-synthetic" title="Демо-витрина рассчитана на синтетические данные">
+			<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2Zm1.25 8h-2.5v-1h.75V8h-.75V7h2v4h.5v1Z"/></svg>
+			Synthetic data · Демо-данные
+		</span>
+	</div>
+	<nav class="container steps" aria-label="Этапы демо">
+		<ol>
+			<li><a href="index.html" aria-current="page">1. Данные задач</a></li>
+			<li><span aria-disabled="true">2. Состояние системы <small>скоро</small></span></li>
+			<li><span aria-disabled="true">3. Возможности <small>скоро</small></span></li>
+			<li><span aria-disabled="true">4. Прогноз <small>скоро</small></span></li>
+		</ol>
+	</nav>
+</header>
+
+<main id="main" class="container">
+	<div class="disclaimer" role="note">
+		<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8.9 1.6a1 1 0 0 0-1.8 0L.6 13.5A1 1 0 0 0 1.5 15h13a1 1 0 0 0 .9-1.5L8.9 1.6ZM8 5c.4 0 .75.34.72.74l-.27 4.1a.45.45 0 0 1-.9 0l-.27-4.1A.72.72 0 0 1 8 5Zm0 6.2a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z"/></svg>
+		<p><strong>Данные сгенерированы для демонстрации. Не использовать для реальных решений.</strong>
+			Загружайте только синтетические или обезличенные файлы — они обрабатываются в браузере и никуда не отправляются.
+			Источник: <code data-source>не загружен</code>, дата среза: <span data-asof>—</span>.</p>
+	</div>
+
+	<div id="data-warning" class="disclaimer disclaimer-danger" role="alert" hidden>
+		<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8.9 1.6a1 1 0 0 0-1.8 0L.6 13.5A1 1 0 0 0 1.5 15h13a1 1 0 0 0 .9-1.5L8.9 1.6ZM8 5c.4 0 .75.34.72.74l-.27 4.1a.45.45 0 0 1-.9 0l-.27-4.1A.72.72 0 0 1 8 5Zm0 6.2a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z"/></svg>
+		<p><strong>Схема помечена как несинтетическая (<code>"synthetic": false</code>).</strong>
+			Перед показом убедитесь, что в файле нет персональных данных, реальных клиентов и коммерческой тайны.</p>
+	</div>
+
+	<p class="lead">Таблица — единый источник для трёх графиков следующих этапов: <b>состояние системы</b> (CFD),
+		<b>возможности</b> (пропускная способность и Lead Time) и <b>прогноз</b> (Monte Carlo).
+		Формат CSV и колонки для графиков задаются JSON-схемой. В колонках статусов — дата входа задачи в статус, текущий статус подсвечен.</p>
+
+	<section class="panel controls" aria-labelledby="controls-h">
+		<h2 id="controls-h" class="sr-only">Источник данных и фильтры</h2>
+
+		<!-- Левая колонка: источник данных (на месте блока seed из этапа 1) -->
+		<div class="seed-form source-form">
+			<p class="field-label" id="source-label">Источник данных</p>
+			<input id="schema-input" type="file" accept=".json,application/json" class="sr-only" tabindex="-1" aria-hidden="true">
+			<input id="csv-input" type="file" accept=".csv,text/csv,.txt" class="sr-only" tabindex="-1" aria-hidden="true">
+			<div class="input-row" role="group" aria-labelledby="source-label">
+				<button id="schema-btn" type="button" class="btn btn-primary">
+					<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 1.5h6.5L13 5v9.5H3v-13Zm1.5 1.5v10h7V5.6L8.9 3H4.5Zm1 4.5h5V9h-5V7.5Zm0 2.5h5v1.5h-5V10Z"/></svg>
+					Выбрать JSON-файл
+				</button>
+				<button id="csv-btn" type="button" class="btn" disabled aria-describedby="csv-hint">
+					<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8.75 14.5h-1.5V7.31L5.03 9.53 3.97 8.47 8 4.44l4.03 4.03-1.06 1.06-2.22-2.22v7.19ZM2 1.5h12V3H2V1.5Z"/></svg>
+					Загрузить данные из CSV
+				</button>
+			</div>
+			<p id="csv-hint" class="hint">Шаг 1 — выберите JSON-схему с форматом CSV. Кнопка загрузки CSV разблокируется после её проверки.</p>
+
+			<p id="schema-status" class="file-status" role="status" aria-live="polite"><b>Схема:</b> не выбрана</p>
+			<div id="schema-msgs" class="msgs"></div>
+			<p id="csv-status" class="file-status" role="status" aria-live="polite"><b>Данные:</b> не загружены</p>
+			<div id="csv-msgs" class="msgs"></div>
+			<button id="clear-btn" type="button" class="btn btn-link" hidden>Очистить схему и данные</button>
+
+			<form id="gen-form" class="gen-form" novalidate>
+				<label for="gen-seed">Нет файлов? Демо-набор по seed</label>
+				<div class="input-row">
+					<input id="gen-seed" name="seed" type="number" inputmode="numeric" min="0" max="4294967295" step="1" aria-describedby="gen-help gen-msg">
+					<button type="submit" class="btn">Скачать CSV</button>
+					<button type="button" id="gen-schema" class="btn">Скачать схему</button>
+				</div>
+				<p id="gen-help" class="hint">Тот же генератор, что на этапе 1: одинаковый seed — одинаковые данные.</p>
+				<p id="gen-msg" class="file-status" role="status" aria-live="polite" hidden></p>
+			</form>
+		</div>
+
+		<!-- Правая колонка: фильтры (сегменты строятся из mapping.segments схемы) -->
+		<form id="filters" class="filters" role="search" aria-label="Фильтры таблицы" onsubmit="return false;">
+			<div class="field field-search" id="search-field">
+				<label for="f-q" id="f-q-label">Поиск по ID или теме</label>
+				<input id="f-q" type="search" placeholder="Например, KRT или отчёт" autocomplete="off" disabled>
+			</div>
+			<div id="seg-filters" class="contents"></div>
+			<div class="field">
+				<label for="f-status">Текущий статус</label>
+				<select id="f-status" disabled><option value="">Все статусы</option></select>
+			</div>
+			<div class="field field-actions">
+				<button type="button" id="f-reset" class="btn" disabled>Сбросить</button>
+			</div>
+		</form>
+	</section>
+
+	<section id="status-section" class="status-bar" aria-labelledby="chips-h" hidden>
+		<h2 id="chips-h" class="section-title">Где сейчас задачи <span class="muted">на <span data-asof>—</span></span></h2>
+		<div id="status-chips" class="chips" role="group" aria-label="Быстрый фильтр по текущему статусу"></div>
+	</section>
+
+	<section class="panel table-panel" aria-labelledby="table-h">
+		<div class="table-toolbar">
+			<div>
+				<h2 id="table-h" class="section-title">Задачи</h2>
+				<p id="table-meta" class="muted" aria-live="polite">Нет данных</p>
+			</div>
+			<div class="toolbar-actions">
+				<span class="legend"><span class="dot" aria-hidden="true"></span>текущий статус</span>
+				<span class="legend"><span class="dot dot-done" aria-hidden="true"></span>закрыта</span>
+				<button id="export-csv" class="btn" type="button" disabled title="Выгрузка в формате схемы, кодировка UTF-8">
+					<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M7.25 1.5h1.5v7.19l2.22-2.22 1.06 1.06L8 11.56 3.97 7.53l1.06-1.06 2.22 2.22V1.5ZM2 12.5h12V14H2v-1.5Z"/></svg>
+					Скачать CSV (текущий срез)
+				</button>
+			</div>
+		</div>
+
+		<div id="no-data" class="state">
+			<p><b>Данные не загружены.</b> <span id="no-data-text">Выберите JSON-схему с форматом CSV, затем загрузите CSV-файл.</span></p>
+			<button id="no-data-btn" class="btn btn-primary" type="button">Выбрать JSON-файл</button>
+		</div>
+
+		<div id="loading-state" class="state" role="status" hidden>Разбор CSV и проверка строк…</div>
+
+		<div id="table-wrap" class="table-wrap" tabindex="0" role="region" aria-labelledby="table-h" hidden>
+			<table id="tasks-table" class="tasks-table">
+				<caption class="sr-only">Задачи трекера. Колонки заданы JSON-схемой; в колонках статусов — дата входа задачи в статус.</caption>
+				<thead id="tasks-thead"></thead>
+				<tbody id="tasks-tbody"></tbody>
+			</table>
+		</div>
+
+		<div id="empty-state" class="state" hidden>
+			<p>Нет задач по выбранным фильтрам.</p>
+			<button class="btn" type="button" id="empty-reset">Сбросить фильтры</button>
+		</div>
+
+		<nav id="pager" class="pager" aria-label="Страницы таблицы" hidden>
+			<label for="page-size">Строк на странице</label>
+			<select id="page-size">
+				<option value="25">25</option>
+				<option value="50">50</option>
+				<option value="100">100</option>
+				<option value="all">Все</option>
+			</select>
+			<button id="page-prev" class="btn" type="button" aria-label="Предыдущая страница">← Назад</button>
+			<span id="page-info" aria-live="polite"></span>
+			<button id="page-next" class="btn" type="button" aria-label="Следующая страница">Вперёд →</button>
+		</nav>
+	</section>
+
+	<section class="panel method" aria-labelledby="method-h">
+		<h2 id="method-h" class="section-title">Data &amp; Methodology</h2>
+
+		<details>
+			<summary>Словарь данных демо-набора</summary>
+			<div class="table-scroll">
+				<table class="dict">
+					<thead><tr><th scope="col">Поле</th><th scope="col">Тип</th><th scope="col">Домен / формат</th><th scope="col">Смысл</th></tr></thead>
+					<tbody>
+					<tr><th scope="row">ID</th><td>строка, уникальна</td><td><code>^[A-Z]{3}[0-9]{3}$</code>; буквы без I и O</td><td>Ключ задачи в трекере</td></tr>
+					<tr><th scope="row">Тема</th><td>строка</td><td>Шаблон по типу работы + модуль системы</td><td>Краткое описание работы</td></tr>
+					<tr><th scope="row">Команда</th><td>справочник</td><td>Платформа · Ядро · Интеграции</td><td>Владелец задачи (Assignee team)</td></tr>
+					<tr><th scope="row">Тип работы</th><td>справочник</td><td>Новый функционал · Ошибка · Техническое развитие</td><td>Природа запроса</td></tr>
+					<tr><th scope="row">Класс обслуживания</th><td>справочник</td><td>EXP · FD · STD · INT</td><td>Канбан: Expedite (срочный), Fixed Date (фиксированная дата), Standard (стандартный), Intangible (нематериальный)</td></tr>
+					<tr><th scope="row">Открыта … Закрыта</th><td>дата</td><td><code>dd.MM.yyyy</code> или пусто</td><td>Дата входа в статус. Даты не убывают слева направо; пусто — статус ещё не достигнут</td></tr>
+					<tr><th scope="row">Текущий статус</th><td>вычисляемое</td><td>Последний статус с заполненной датой</td><td>Подсвечивается в строке, используется в фильтре</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</details>
+
+		<details>
+			<summary>Формат JSON-схемы</summary>
+			<div class="table-scroll">
+				<table class="dict">
+					<thead><tr><th scope="col">Поле</th><th scope="col">Значения</th><th scope="col">Назначение</th></tr></thead>
+					<tbody>
+					<tr><th scope="row"><code>csv.delimiter</code></th><td><code>";"</code>, <code>","</code>, <code>"tab"</code>, любая строка</td><td>Разделитель полей</td></tr>
+					<tr><th scope="row"><code>csv.quote</code>, <code>csv.encoding</code></th><td><code>"\""</code>; <code>utf-8</code>, <code>windows-1251</code></td><td>Кавычки (удвоенная — экранирование) и кодировка файла</td></tr>
+					<tr><th scope="row"><code>csv.header</code>, <code>skipEmptyLines</code>, <code>trim</code>, <code>decimalSeparator</code></th><td><code>true</code>/<code>false</code>; <code>"."</code>/<code>","</code></td><td>Заголовок, пустые строки, обрезка пробелов, дробная часть</td></tr>
+					<tr><th scope="row"><code>validation.onRowError</code></th><td><code>"skip"</code> / <code>"fail"</code></td><td>Пропустить строку с ошибкой или отменить загрузку</td></tr>
+					<tr><th scope="row"><code>columns[]</code>: <code>key</code>, <code>source</code> / <code>index</code>, <code>label</code></th><td>латиница; имя в заголовке / номер с 0; строка</td><td>Внутреннее имя, где взять значение в CSV, заголовок в таблице</td></tr>
+					<tr><th scope="row"><code>columns[].type</code>, <code>format</code></th><td><code>string</code>, <code>enum</code>, <code>date</code>, <code>integer</code>, <code>number</code>; <code>dd.MM.yyyy</code>…</td><td>Тип данных, проверка и сортировка; формат даты</td></tr>
+					<tr><th scope="row"><code>required</code>, <code>unique</code>, <code>pattern</code>, <code>values</code></th><td>boolean; регулярное выражение; массив</td><td>Проверки значений и справочник для <code>enum</code></td></tr>
+					<tr><th scope="row"><code>valueLabels</code>, <code>display: "tag"</code>, <code>tones</code></th><td>расшифровки; <code>neutral</code>, <code>info</code>, <code>success</code>, <code>warning</code>, <code>danger</code></td><td>Показ значения меткой в цветах сайта</td></tr>
+					<tr><th scope="row"><code>mapping.id</code>, <code>title</code>, <code>search</code>, <code>segments</code></th><td>ключи колонок</td><td>Ключ строки, тема, поля поиска, фильтры</td></tr>
+					<tr><th scope="row"><code>mapping.workflow</code></th><td><code>stages</code>, <code>doneStage</code></td><td>Этапы процесса: текущий статус, чипы, проверка порядка дат</td></tr>
+					<tr><th scope="row"><code>mapping.charts.*</code></th><td><code>cfd</code>, <code>throughput</code>, <code>leadTime</code>, <code>cycleTime</code>, <code>forecast</code></td><td>Колонки для типовых графиков следующих этапов</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</details>
+
+		<details>
+			<summary>Как генерируются демо-данные</summary>
+			<ol class="method-list">
+				<li><b>Дата среза зафиксирована</b> — <span data-gen-asof>—</span>. Окно — 26 недель (с <span data-window-start>—</span>). Разогрев 90 дней: попадают задачи, открытые раньше окна, но не закрытые к его началу.</li>
+				<li><b>Поступление задач</b> — только в рабочие дни, по каждой команде: <code>N ~ Poisson(λ)</code>,
+					<code>λ = rate × (0,825 + 0,35·t) × (1 + 0,12·sin(2π·Δd/28))</code>, где <code>t ∈ [0;1]</code> — доля пройденного периода (рост спроса +35%), 28-дневный цикл — волны планирования.
+					Rate: Платформа 0,75; Ядро 1,10; Интеграции 0,70 задачи в рабочий день.</li>
+				<li><b>Атрибуты:</b> тип работы 50 / 30 / 20%; класс обслуживания зависит от типа (ошибки чаще EXP, техразвитие чаще INT).</li>
+				<li><b>Длительность перехода</b> в рабочих днях: <code>round(LogNormal(медиана × k<sub>класс</sub> × k<sub>тип</sub> × k<sub>команда</sub>, σ))</code>.
+					Базовые медианы: ожидание анализа 3,0; анализ 2,0; разработка 5,0; тестирование 2,5; релиз → закрытие 1,5.</li>
+				<li><b>Блокировки:</b> с вероятностью 3% (EXP), 8% (FD), 12% (STD), 18% (INT) к одному переходу добавляется 3–10 рабочих дней — «тяжёлый хвост» Lead Time.</li>
+				<li><b>Заложенная аномалия:</b> за последние 60 дней тестирование замедляется до ×2,2 — узкое место для графика состояния.</li>
+			</ol>
+		</details>
+
+		<details>
+			<summary>Ограничения</summary>
+			<ul class="method-list">
+				<li>Данные не репрезентативны и не отражают ни одну реальную организацию.</li>
+				<li>Нет возвратов в предыдущие статусы (rework), отмен задач и праздничных дней.</li>
+				<li>Лимиты: CSV до 20 МБ, схема до 1 МБ; в отчёте показываются первые 200 строк с ошибками.</li>
+				<li>Выгрузка среза всегда в UTF-8 — для повторной загрузки файла из Excel в <code>windows-1251</code> поменяйте <code>csv.encoding</code> в схеме.</li>
+			</ul>
+		</details>
+
+		<details>
+			<summary>Как загрузить свои данные</summary>
+			<ul class="method-list">
+				<li>Опишите формат выгрузки в JSON по образцу <code>samples/tasks-schema.json</code>: разделитель, колонки, типы, форматы дат и маппинг.</li>
+				<li>Нажмите «Выбрать JSON-файл» — схема проверится, ошибки покажутся списком с путём к полю. Затем «Загрузить данные из CSV».</li>
+				<li>Строки с ошибками пропускаются и выводятся с номером строки и причиной; при <code>"onRowError": "fail"</code> загрузка отменяется целиком.</li>
+				<li>Демо-набор по seed: одинаковый seed даёт одинаковый CSV и одинаковый отпечаток данных — это проверка воспроизводимости.</li>
+			</ul>
+		</details>
+	</section>
+</main>
+
+<footer class="site-footer">
+	<div class="container">
+		<p><span class="badge badge-synthetic">Synthetic data</span>
+			Источник <code data-source>не загружен</code> · схема <span data-schema>—</span> · срез <span data-asof>—</span> · записей: <span data-count>0</span></p>
+		<p class="muted">Данные сгенерированы для демонстрации. Не использовать для реальных решений.</p>
+	</div>
+</footer>
+
+<noscript><p class="container">Для работы демо включите JavaScript.</p></noscript>
+<script src="assets/data.js" defer></script>
+<script src="assets/loader.js" defer></script>
+<script src="assets/app.js" defer></script>
+</body>
+</html>
